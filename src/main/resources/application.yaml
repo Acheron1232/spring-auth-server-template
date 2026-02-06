@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: auth-server
+
+  security:
+    oauth2:
+      client:
+        registration:
+
+          auth-server-service:
+            provider: auth-server
+            client-id: ${AUTH_SERVER_CLIENT_ID}
+            client-secret: ${AUTH_SERVER_CLIENT_SECRET}
+            authorization-grant-type: client_credentials
+
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope:
+              - profile
+              - email
+              - openid
+
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope:
+              - user
+              - user:email
+
+        provider:
+          auth-server:
+            token-uri: http://127.0.0.1:9000/oauth2/token
+
+  mvc:
+    apiversion:
+      use:
+        header: API-Version
+      default: v1
+      required: false
+      detect-supported: true
+      supported:
+        - v1
+
+  threads:
+    virtual:
+      enabled: true
+
+  profiles:
+    active: dev
+
+  config:
+    import: file:.env[.properties]
+
+  docker:
+    compose:
+      file: local-infra/docker-compose.yaml
+
+  jpa:
+    open-in-view: true
+
+  main:
+    banner-mode: off
+
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+aws:
+  public_key: ${AWS_PUBLIC_KEY}
+  private_key: ${AWS_PRIVATE_KEY}
+  region: ${AWS_REGION:eu-north-1}
+  arn: ${AWS_ARN}
+  bucket_name: ${AWS_BUCKET_NAME}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

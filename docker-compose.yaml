@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  backend:
+    image: acheron1232/github_extension:latest
+    container_name: backend
+    ports:
+      - "8080:8080"

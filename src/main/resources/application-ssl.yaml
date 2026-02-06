@@ -1,0 +1,7 @@
+server:
+  ssl:
+    enabled: ${SERVER_SSL_ENABLED:true}
+    key-store: ${SERVER_SSL_KEY_STORE}
+    key-password: ${SERVER_SSL_KEY_STORE_PASSWORD}
+    key-store-type: ${SERVER_SSL_KEY_STORE_TYPE:PKCS12}
+  port: ${SERVER_PORT:8443}
