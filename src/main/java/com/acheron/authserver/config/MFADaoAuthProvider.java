@@ -20,15 +20,6 @@ public class MFADaoAuthProvider extends DaoAuthenticationProvider {
     }
 
     @Override
-    protected Authentication createSuccessAuthentication(Object principal, Authentication authentication, UserDetails user) {
-        return new UsernamePasswordAuthenticationToken(
-                principal,
-                authentication.getCredentials(),
-                user.getAuthorities()
-        );
-    }
-
-    @Override
     protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         super.additionalAuthenticationChecks(userDetails, authentication);
         CustomWebAuthenticationDetails details =

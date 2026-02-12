@@ -26,8 +26,16 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    main {
+        java {
+            exclude 'com/acheron/authserver/delete_me/**'
+        }
+    }
+}
+
 dependencies {
-    var swaggerUi = "2.8.13"
+    var swaggerUi = "3.0.1"
     var aws = "2.41.1"
     var zxing = "3.5.3"
     var otp = "1.0.0"

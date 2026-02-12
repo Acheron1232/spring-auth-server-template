@@ -1,7 +1,25 @@
 spring:
   application:
     name: app
-
+  docker:
+    compose:
+      file: ./app/compose.yaml
+  main:
+    banner-mode: off
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+  ai:
+    embedding:
+      transformer:
+        onnx:
+          gpu-device-id: 0 #optional: for gpu using
+    vectorstore:
+      pgvector:
+        initialize-schema: true
 
   security:
     oauth2:

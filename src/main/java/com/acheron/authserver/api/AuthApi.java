@@ -2,15 +2,12 @@ package com.acheron.authserver.api;
 
 import com.acheron.authserver.entity.Role;
 import com.acheron.authserver.entity.User;
-import com.acheron.authserver.service.QrCodeService;
 import com.acheron.authserver.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.aerogear.security.otp.api.Base32;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -19,16 +16,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.awt.image.BufferedImage;
 import java.util.Map;
 
 @Slf4j
 @Controller
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthApi {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
-    private final QrCodeService qrCodeService;
 
     @GetMapping("/login")
     public String login() {
@@ -69,31 +64,6 @@ public class AuthController {
             session.invalidate();
         }
         SecurityContextHolder.clearContext();
-    }
-
-    @PostMapping("/reset_password")
-    public String resetPassword(@RequestParam String email) {
-
-        userService.resetPassword(email);
-        return "login";
-    }
-
-    @GetMapping("/reset_password_token")
-    @ResponseBody
-    public ResponseEntity<String> reset(@RequestParam("token") String token) {
-        return ResponseEntity.ok(userService.reset(token));
-    }
-
-    @GetMapping("/reset_password")
-    public String resetPassword() {
-        return "reset_password";
-    }
-
-    @GetMapping(value = "/mfa_qr", produces = {MediaType.IMAGE_PNG_VALUE})
-    @ResponseBody
-    public BufferedImage getQrCode() {
-        System.out.println("asd");
-        return qrCodeService.generateQrCode("Talent", "aryemfedorov@gmail.com", "K4RJK7LR3FFUSTCG");
     }
 
 }

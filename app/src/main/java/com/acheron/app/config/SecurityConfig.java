@@ -13,7 +13,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(e -> e.anyRequest().authenticated())
+                .authorizeHttpRequests(e -> e
+                        .requestMatchers("/").permitAll()
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(e -> e.jwt(Customizer.withDefaults()))
                 .build();
     }

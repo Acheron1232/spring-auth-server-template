@@ -2,12 +2,16 @@ package com.acheron.authserver.service;
 
 import com.acheron.authserver.dto.UserCreateDto;
 import com.acheron.authserver.dto.request.MailDto;
+import com.acheron.authserver.dto.request.UserPatchRequest;
+import com.acheron.authserver.dto.request.UserPutRequest;
+import com.acheron.authserver.dto.response.UserResponse;
 import com.acheron.authserver.entity.Role;
 import com.acheron.authserver.entity.Token;
 import com.acheron.authserver.entity.User;
 import com.acheron.authserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +21,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,6 +41,81 @@ public class UserService implements UserDetailsService {
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
 
+    // api methods
+    public ResponseEntity<UserResponse> getUserInfo(User user) {
+        return ResponseEntity.ok(UserResponse.fromEntity(user));
+    }
+
+    @Transactional
+    public ResponseEntity<UserResponse> updateUser(User currentUser, UserPutRequest request) {
+        validateUniqueness(request.email(), request.username(), currentUser);
+
+        if (!currentUser.getEmail().equals(request.email())) {
+            currentUser.setEmailVerified(false);
+        }
+
+        currentUser.setUsername(request.username());
+        currentUser.setEmail(request.email());
+        currentUser.setEnabled(request.enabled());
+        currentUser.setLocked(request.locked());
+
+        User savedUser = userRepository.save(currentUser);
+        log.info("User {} fully updated their profile", savedUser.getId());
+
+        return ResponseEntity.ok(UserResponse.fromEntity(savedUser));
+    }
+
+    @Transactional
+    public ResponseEntity<UserResponse> patchUser(User currentUser, UserPatchRequest request) {
+        String newEmail = request.email() != null ? request.email() : currentUser.getEmail();
+        String newUsername = request.username() != null ? request.username() : currentUser.getUsername();
+
+        if (request.email() != null || request.username() != null) {
+            validateUniqueness(newEmail, newUsername, currentUser);
+        }
+
+        if (StringUtils.hasText(request.username())) {
+            currentUser.setUsername(request.username());
+        }
+
+        if (StringUtils.hasText(request.email()) && !currentUser.getEmail().equals(request.email())) {
+            currentUser.setEmail(request.email());
+            currentUser.setEmailVerified(false);
+        }
+
+        if (request.enabled() != null) currentUser.setEnabled(request.enabled());
+        if (request.locked() != null) currentUser.setLocked(request.locked());
+        if (request.mfaEnabled() != null) currentUser.setMfaEnabled(request.mfaEnabled());
+
+        User savedUser = userRepository.save(currentUser);
+        log.info("User {} patched their profile", savedUser.getId());
+
+        return ResponseEntity.ok(UserResponse.fromEntity(savedUser));
+    }
+
+    @Transactional
+    public ResponseEntity<Void> delete(User user) {
+
+        userRepository.delete(user);
+
+        log.info("User account deleted: {}", user.getId());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    private void validateUniqueness(String email, String username, User currentUser) {
+        Optional<User> userByEmail = userRepository.findUserByEmail(email);
+        if (userByEmail.isPresent() && !userByEmail.get().getId().equals(currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use");
+        }
+
+        Optional<User> userByUsername = userRepository.findUserByUsername(username);
+        if (userByUsername.isPresent() && !userByUsername.get().getId().equals(currentUser.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username is already in use");
+        }
+    }
+
+    // oauth methods
     public void saveOauthUser(UserCreateDto user) {
         User save = save(new User(null, user.user().email(), user.user().username(), null, user.user().isEmailVerified(), true, false, false, null, null, Role.USER));
 
@@ -41,24 +123,9 @@ public class UserService implements UserDetailsService {
         return; //TODO
     }
 
-    public boolean existsByEmail(String email) {
-        return userRepository.existsUserByEmail(email);
-    }
-
-    public User findByUsername(String username) {
-        return userRepository.findUserByUsername(username).get(); //TODO
-    }
-
-    public User findByEmail(String email) {
-        return userRepository.findUserByEmail(email).get(); //TODO
-    }
-
-    public User save(User user) {
-        return userRepository.save(user);
-    }
-
     @Override
     @Transactional(readOnly = true)
+    @NullMarked
     public UserDetails loadUserByUsername(String username) {
         return findByUsername(username);
     }
@@ -143,5 +210,22 @@ public class UserService implements UserDetailsService {
                 }
         );
         return newPassword.get();
+    }
+
+    //base methods
+    public boolean existsByEmail(String email) {
+        return userRepository.existsUserByEmail(email);
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findUserByUsername(username).orElseThrow(); //TODO
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findUserByEmail(email).orElseThrow(); //TODO
+    }
+
+    public User save(User user) {
+        return userRepository.save(user);
     }
 }
