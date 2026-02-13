@@ -7,6 +7,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,19 +51,19 @@ import java.time.Duration;
 import java.util.UUID;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity(debug = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final Oauth2AccessTokenCustomizer oauth2AccessTokenCustomizer;
     private final PasswordEncoder passwordEncoder;
-    private final OAuth2LoginSuccessHandler auth2LoginSuccessHandler;
+    private final FederatedIdentityAuthenticationSuccessHandler auth2LoginSuccessHandler;
     private final CustomWebAuthenticationDetailsSource authenticationDetailsSource;
     private final MFADaoAuthProvider daoAuthenticationProvider;
     private final DynamicCorsConfigurationSource dynamicCorsConfigurationSource;
 
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) {
 
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 //                OAuth2AuthorizationServerConfigurer.authorizationServer();

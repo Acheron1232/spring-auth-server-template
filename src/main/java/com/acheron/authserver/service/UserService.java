@@ -1,13 +1,15 @@
 package com.acheron.authserver.service;
 
+import com.acheron.authserver.config.oauth_provider_handlers.OAuth2UserHandler;
 import com.acheron.authserver.dto.UserCreateDto;
 import com.acheron.authserver.dto.request.MailDto;
 import com.acheron.authserver.dto.request.UserPatchRequest;
 import com.acheron.authserver.dto.request.UserPutRequest;
 import com.acheron.authserver.dto.response.UserResponse;
-import com.acheron.authserver.entity.Role;
-import com.acheron.authserver.entity.Token;
-import com.acheron.authserver.entity.User;
+import com.acheron.authserver.dto.util.UnifiedUserDto;
+import com.acheron.authserver.entity.*;
+import com.acheron.authserver.mapper.UserMapper;
+import com.acheron.authserver.repository.FederatedIdentityRepository;
 import com.acheron.authserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,6 +44,9 @@ public class UserService implements UserDetailsService {
     private final TokenService tokenService;
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
+    private final FederatedIdentityRepository federatedIdentityRepository;
+    private final List<OAuth2UserHandler> strategies;
 
     // api methods
     public ResponseEntity<UserResponse> getUserInfo(User user) {
@@ -116,11 +123,40 @@ public class UserService implements UserDetailsService {
     }
 
     // oauth methods
-    public void saveOauthUser(UserCreateDto user) {
-        User save = save(new User(null, user.user().email(), user.user().username(), null, user.user().isEmailVerified(), true, false, false, null, null, Role.USER));
+    @Transactional
+    public void saveOauthUser(String providerId, OAuth2User oauth2User) {
+        // 1. Екстракт даних через стратегію (як ми робили раніше)
+        UnifiedUserDto dto = extractUserDto(providerId, oauth2User);
 
-//        save.setFederatedIdentities(Set.of(new FederatedIdentity(null,save, OAuthProvider.GITHUB,)));
-        return; //TODO
+        // 2. Шукаємо юзера в БД
+        Optional<User> existingUser = userRepository.findUserByEmail(dto.getEmail());
+
+        User user;
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+            // Тут можна оновити дані, якщо треба
+        } else {
+            // 3. Створення нового юзера через Mapper
+            user = userMapper.toUserEntity(dto);
+            user = userRepository.save(user);
+        }
+
+        // 4. Перевірка/Створення FederatedIdentity
+        OAuthProvider provider = OAuthProvider.valueOf(providerId.toUpperCase());
+
+        if (!user.hasFederatedIdentity(provider)) {
+            FederatedIdentity identity = userMapper.toFederatedIdentity(dto, user);
+            federatedIdentityRepository.save(identity);
+        }
+    }
+
+    public UnifiedUserDto extractUserDto(String registrationId, OAuth2User oauth2User) {
+        return strategies.stream()
+                .filter(strategy -> strategy.supports(registrationId))
+                .findFirst()
+                .map(strategy -> strategy.extract(registrationId, oauth2User))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Sorry, login with " + registrationId + " is not supported yet."));
     }
 
     @Override
