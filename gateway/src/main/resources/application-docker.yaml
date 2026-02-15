@@ -1,0 +1,30 @@
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          auth-server:
+            issuer-uri: http://auth-server:9000
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-server
+              uri: http://auth-server:9000
+              predicates:
+                - Path=/login/**, /oauth2/**, /.well-known/**
+
+            - id: resource-service
+              uri: http://resource-service:8081
+              predicates:
+                - Path=/api/**
+              filters:
+                - TokenRelay=
+
+          default-filters:
+            - TokenRelay=
+
+server:
+  port: 8080

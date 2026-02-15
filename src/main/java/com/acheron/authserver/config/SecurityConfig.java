@@ -7,7 +7,6 @@ import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -18,7 +17,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,7 +49,7 @@ import java.time.Duration;
 import java.util.UUID;
 
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final Oauth2AccessTokenCustomizer oauth2AccessTokenCustomizer;
@@ -63,10 +61,18 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(
+            HttpSecurity http,
+            RegisteredClientRepository registeredClientRepository,
+            OAuth2AuthorizationService authorizationService) throws Exception {
 
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
-//                OAuth2AuthorizationServerConfigurer.authorizationServer();
+        authorizationServerConfigurer
+                .clientAuthentication(clientAuth -> clientAuth
+                        .authenticationConverter(new PublicClientRefreshTokenAuthenticationConverter())
+                        .authenticationProvider(new PublicClientRefreshTokenAuthenticationProvider(
+                                registeredClientRepository, authorizationService))
+                );
         http
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, authorizationServer ->
@@ -141,13 +147,11 @@ public class SecurityConfig {
 
         ClassLoader classLoader = JdbcOAuth2AuthorizationService.class.getClassLoader();
 
-
         BasicPolymorphicTypeValidator.Builder typeValidatorBuilder = BasicPolymorphicTypeValidator.builder()
                 .allowIfBaseType(User.class)
                 .allowIfSubType("com.acheron.authserver.entity")
                 .allowIfSubType("java.util")
                 .allowIfSubType("org.springframework.security");
-
 
         var securityModules = SecurityJacksonModules.getModules(classLoader, typeValidatorBuilder);
 
@@ -211,9 +215,12 @@ public class SecurityConfig {
         JwtGenerator jwtAccessTokenGenerator = new JwtGenerator(jwtEncoder);
         jwtAccessTokenGenerator.setJwtCustomizer(oauth2AccessTokenCustomizer);
         OAuth2RefreshTokenGenerator refreshTokenGenerator = new OAuth2RefreshTokenGenerator();
+        OAuth2PublicClientRefreshTokenGenerator publicClientRefreshTokenGenerator =
+                new OAuth2PublicClientRefreshTokenGenerator();
         return new DelegatingOAuth2TokenGenerator(
                 jwtAccessTokenGenerator,
-                refreshTokenGenerator
+                refreshTokenGenerator,
+                publicClientRefreshTokenGenerator
         );
     }
 }

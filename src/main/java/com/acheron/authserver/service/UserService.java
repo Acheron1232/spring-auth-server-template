@@ -125,23 +125,18 @@ public class UserService implements UserDetailsService {
     // oauth methods
     @Transactional
     public void saveOauthUser(String providerId, OAuth2User oauth2User) {
-        // 1. Екстракт даних через стратегію (як ми робили раніше)
         UnifiedUserDto dto = extractUserDto(providerId, oauth2User);
 
-        // 2. Шукаємо юзера в БД
         Optional<User> existingUser = userRepository.findUserByEmail(dto.getEmail());
 
         User user;
         if (existingUser.isPresent()) {
             user = existingUser.get();
-            // Тут можна оновити дані, якщо треба
         } else {
-            // 3. Створення нового юзера через Mapper
             user = userMapper.toUserEntity(dto);
             user = userRepository.save(user);
         }
 
-        // 4. Перевірка/Створення FederatedIdentity
         OAuthProvider provider = OAuthProvider.valueOf(providerId.toUpperCase());
 
         if (!user.hasFederatedIdentity(provider)) {

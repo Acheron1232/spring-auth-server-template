@@ -16,7 +16,7 @@ import java.util.UUID;
 @Entity
 @Builder
 @Table(name = "token")
-@SQLDelete(sql = "UPDATE users SET deleted_at = now() WHERE id=?")
+@SQLDelete(sql = "UPDATE token SET deleted_at = now() WHERE id=?")
 @SQLRestriction("deleted_at is NULL")
 public class Token extends AbstractAuditableEntity {
 

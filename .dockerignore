@@ -1,0 +1,11 @@
+.git
+.github
+.gradle
+.idea
+.windsurf
+.env
+build/
+front/
+gateway/
+*.iml
+*.md

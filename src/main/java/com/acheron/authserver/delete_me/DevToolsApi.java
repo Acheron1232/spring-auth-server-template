@@ -35,8 +35,6 @@ public class DevToolsApi {
                 .claim("authorities", List.of("ROLE_USER", "ROLE_ADMIN"))
                 .build();
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256, "rsa-key").build(), claims)).getTokenValue();
-        
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 }

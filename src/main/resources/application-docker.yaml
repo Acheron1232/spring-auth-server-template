@@ -1,0 +1,16 @@
+server:
+  port: 9000
+
+spring:
+  docker:
+    compose:
+      enabled: false
+
+  jpa:
+    show-sql: false
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

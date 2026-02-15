@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: auth-server-test
+
+  profiles:
+    active: test
+
+  docker:
+    compose:
+      enabled: false
+
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: none
+
+  main:
+    banner-mode: off
+
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+
+  security:
+    oauth2:
+      client:
+        registration:
+          auth-server-service:
+            provider: auth-server
+            client-id: test-client
+            client-secret: test-secret
+            authorization-grant-type: client_credentials
+
+          google:
+            client-id: test-google-id
+            client-secret: test-google-secret
+            authorization-grant-type: authorization_code
+            scope: profile, email, openid
+
+          github:
+            client-id: test-github-id
+            client-secret: test-github-secret
+            authorization-grant-type: authorization_code
+            scope: user, user:email
+
+        provider:
+          auth-server:
+            token-uri: http://127.0.0.1:9000/oauth2/token
+
+  threads:
+    virtual:
+      enabled: true
+
+aws:
+  public_key: test-key
+  private_key: test-key
+  region: eu-north-1
+  arn: arn:aws:kms:eu-north-1:000000000000:key/test
+  bucket_name: test-bucket
+
+server:
+  port: 0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

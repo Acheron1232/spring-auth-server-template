@@ -2,6 +2,9 @@ server:
   port: 9000
 
 spring:
+
+  origins: "http://localhost:5173,http://localhost:3000,https://localhost:5173,https://localhost:3000" # can be removed in production
+
   jpa:
     show-sql: true
 

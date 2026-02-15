@@ -15,7 +15,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@SQLDelete(sql = "UPDATE users SET deleted_at = now() WHERE id=?")
+@SQLDelete(sql = "UPDATE mail SET deleted_at = now() WHERE id=?")
 @SQLRestriction("deleted_at is NULL")
 public class Mail extends AbstractAuditableEntity {
     @Id

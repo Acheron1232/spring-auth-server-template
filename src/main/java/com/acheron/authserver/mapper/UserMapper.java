@@ -16,14 +16,13 @@ public class UserMapper {
     public User toUserEntity(UnifiedUserDto dto) {
         return User.builder()
                 .email(dto.getEmail())
-                // В якості username використовуємо email, або частину до @, якщо треба
                 .username(dto.getEmail())
-                .emailVerified(true) // OAuth провайдери зазвичай гарантують валідність пошти
+                .emailVerified(true)
                 .enabled(true)
                 .locked(false)
                 .mfaEnabled(false)
-                .role(Role.USER) // Роль за замовчуванням
-                .passwordHash(null) // Пароль відсутній для OAuth користувачів
+                .role(Role.USER)
+                .passwordHash(null)
                 .build();
     }
 
@@ -40,9 +39,8 @@ public class UserMapper {
                 .user(user)
                 .provider(providerEnum)
                 .providerUserId(dto.getProviderUserId())
-                // Використовуємо email або ім'я як логін на стороні провайдера
                 .providerUsername(dto.getEmail() != null ? dto.getEmail() : dto.getFirstName())
-                .providerMetadata(metadata) // Зберігаємо профільні дані тут
+                .providerMetadata(metadata)
                 .build();
     }
 
