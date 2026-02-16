@@ -3,7 +3,7 @@
 [![CI](https://github.com/Acheron1232/spring-auth-server-template/actions/workflows/ci.yml/badge.svg)](https://github.com/Acheron1232/spring-auth-server-template/actions/workflows/ci.yml)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE.md)
 
 A **production-ready OAuth 2.1 / OpenID Connect Authorization Server** built on **Spring Boot 4** and **Spring Authorization Server**. Designed as a drop-in template for business projects that need a secure, modern, and extensible authentication backend.
 
@@ -240,7 +240,7 @@ Contributions are welcome! Please:
 
 ## License
 
-This project is licensed under the Apache License 2.0 — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 — see the [LICENSE](LICENSE.md) file for details.
 
 ---
 
