@@ -77,6 +77,10 @@ spring:
           starttls:
             enable: true
 
+gateway:
+  client:
+    secret: ${GATEWAY_CLIENT_SECRET:gateway-client-secret}
+
 aws:
   public_key: ${AWS_PUBLIC_KEY}
   private_key: ${AWS_PRIVATE_KEY}

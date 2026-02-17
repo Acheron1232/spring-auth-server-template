@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -40,6 +41,8 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Refr
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import tools.jackson.databind.DefaultTyping;
 import tools.jackson.databind.json.JsonMapper;
@@ -64,7 +67,7 @@ public class SecurityConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(
             HttpSecurity http,
             RegisteredClientRepository registeredClientRepository,
-            OAuth2AuthorizationService authorizationService) throws Exception {
+            OAuth2AuthorizationService authorizationService) {
 
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
         authorizationServerConfigurer
@@ -75,6 +78,7 @@ public class SecurityConfig {
                 );
         http
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+                .csrf(AbstractHttpConfigurer::disable)
                 .with(authorizationServerConfigurer, authorizationServer ->
                         authorizationServer
                                 .oidc(Customizer.withDefaults())
@@ -105,7 +109,10 @@ public class SecurityConfig {
         http.oauth2ResourceServer(resourceServer ->
                 resourceServer.jwt(Customizer.withDefaults()));
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                )
                 .formLogin(formLogin -> formLogin.loginPage("/login").permitAll().authenticationDetailsSource(authenticationDetailsSource))
                 .oauth2Login(oauth2Login ->
                         oauth2Login.loginPage("/login").permitAll()
@@ -175,14 +182,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
+    public RegisteredClientRepository registeredClientRepository(@Value("${gateway.client.secret}") String gatewaySecret, JdbcTemplate jdbcTemplate) {
         JdbcRegisteredClientRepository repository = new JdbcRegisteredClientRepository(jdbcTemplate);
         //TODO move clients to changelogs
         String gatewayClientId = "gateway-client";
         if (repository.findByClientId(gatewayClientId) == null) {
             RegisteredClient webClient = RegisteredClient.withId(UUID.randomUUID().toString())
                     .clientId(gatewayClientId)
-                    .clientSecret(passwordEncoder.encode("zxczxczxc"))
+                    .clientSecret(passwordEncoder.encode(gatewaySecret))
                     .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                     .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
@@ -191,13 +198,15 @@ public class SecurityConfig {
                     .scope(OidcScopes.OPENID)
                     .scope(OidcScopes.PROFILE)
                     .scope(OidcScopes.EMAIL)
-                    .scope("message.read")
                     .tokenSettings(TokenSettings.builder()
                             .accessTokenTimeToLive(Duration.ofMinutes(5))
                             .refreshTokenTimeToLive(Duration.ofDays(20))
                             .reuseRefreshTokens(false)
                             .build())
-                    .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+                    .clientSettings(ClientSettings.builder()
+//                            .requireAuthorizationConsent(true)
+                            .requireAuthorizationConsent(false)
+                            .build())
                     .build();
             repository.save(webClient);
         }

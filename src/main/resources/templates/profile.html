@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Profile</title>
+    <link rel="stylesheet" href="/front/style.css">
+</head>
+<body>
+<main class="auth-shell">
+    <div class="auth-bg" aria-hidden="true"></div>
+    <section class="auth-box auth-card" aria-label="Profile">
+        <header class="auth-header">
+            <div class="auth-mark" aria-hidden="true"></div>
+            <h1 class="auth-title">Profile</h1>
+            <p class="auth-subtitle">Manage your account settings</p>
+        </header>
+
+        <div class="message is-success" th:if="${updated}" role="status" aria-live="polite">Saved</div>
+
+        <form class="auth-form" data-auth-form action="/profile" method="post" th:object="${profile}" novalidate>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <div class="field">
+                <label class="field-label" for="profile_username">Username</label>
+                <input id="profile_username" type="text" th:field="*{username}" class="auth-input"
+                       autocomplete="username" required minlength="3" maxlength="32">
+
+                <div class="field-hint is-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}" aria-live="polite"></div>
+                <div class="field-hint" th:if="${!#fields.hasErrors('username')}" data-field-error="username" aria-live="polite"></div>
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="profile_email">Email</label>
+                <input id="profile_email" type="email" th:field="*{email}" class="auth-input"
+                       autocomplete="email" required>
+
+                <div class="field-hint">
+                    <span th:if="${emailVerified}" style="color: rgba(52, 211, 153, 0.92)">Verified</span>
+                    <span th:if="${!emailVerified}" style="color: rgba(251, 113, 133, 0.92)">Not verified</span>
+                </div>
+
+                <div class="field-hint is-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}" aria-live="polite"></div>
+                <div class="field-hint" th:if="${!#fields.hasErrors('email')}" data-field-error="email" aria-live="polite"></div>
+            </div>
+
+            <section class="mfa-card" aria-label="Multi-factor authentication">
+                <div class="mfa-head">
+                    <div>
+                        <h2 class="mfa-title">Multi-factor authentication</h2>
+                        <p class="mfa-subtitle">Turn on MFA to secure your account with one-time codes.</p>
+                    </div>
+                    <label class="toggle" for="profile_mfa">
+                        <input type="checkbox" th:field="*{mfaEnabled}" id="profile_mfa">
+                        <span class="toggle-ui" aria-hidden="true"></span>
+                        <span class="toggle-label">Enable MFA</span>
+                    </label>
+                </div>
+            </section>
+
+            <button type="submit" class="auth-button" data-submit>
+                <span class="btn-label">Save changes</span>
+                <span class="btn-spinner" aria-hidden="true"></span>
+            </button>
+
+            <div class="message" role="status" aria-live="polite"></div>
+        </form>
+
+        <nav class="auth-links" aria-label="Profile links">
+            <a href="/">Home</a>
+            <a href="/spa/logout">Logout</a>
+        </nav>
+    </section>
+</main>
+
+<script defer src="/front/script.js"></script>
+</body>
+</html>

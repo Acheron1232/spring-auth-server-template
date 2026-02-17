@@ -18,6 +18,18 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiError> handleAppException(AppException ex, HttpServletRequest request) {
+        // Create the ApiError object
+        ApiError apiError = new ApiError(
+                ex.getStatus().value(),
+                ex.getStatus().getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(apiError, ex.getStatus());
+    }
+
     /**
      * Handles validation errors (@Valid, @NotNull, etc.).
      * Returns 400 Bad Request.
@@ -36,8 +48,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 errors,
-                path,
-                Instant.now()
+                path
         );
 
         return ResponseEntity.badRequest().body(apiError);
@@ -65,8 +76,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT.value(),
                 HttpStatus.CONFLICT.getReasonPhrase(),
                 message,
-                path,
-                Instant.now()
+                path
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(apiError);
@@ -86,8 +96,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 message,
-                path,
-                Instant.now()
+                path
         );
 
         return ResponseEntity.badRequest().body(apiError);
@@ -106,8 +115,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 ex.getMessage(),
-                path,
-                Instant.now()
+                path
         );
 
         return ResponseEntity.badRequest().body(apiError);

@@ -6,7 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -60,6 +62,8 @@ public class FederatedIdentityAuthenticationSuccessHandler implements Authentica
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
 
+        Authentication authenticationToUse = authentication;
+
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             String registrationId = oauthToken.getAuthorizedClientRegistrationId();
             OAuth2User principal = oauthToken.getPrincipal();
@@ -68,7 +72,16 @@ public class FederatedIdentityAuthenticationSuccessHandler implements Authentica
 
             try {
                 // Perform JIT provisioning or update existing user
-                this.userService.saveOauthUser(registrationId, principal);
+                var localUser = this.userService.saveOauthUser(registrationId, principal);
+
+                UsernamePasswordAuthenticationToken localAuth = new UsernamePasswordAuthenticationToken(
+                        localUser,
+                        null,
+                        localUser.getAuthorities()
+                );
+                localAuth.setDetails(authentication.getDetails());
+                SecurityContextHolder.getContext().setAuthentication(localAuth);
+                authenticationToUse = localAuth;
             } catch (Exception e) {
                 // Log the error but allow the login to proceed (or handle as a fatal error depending on requirements)
                 log.error("Error saving OAuth2 user", e);
@@ -76,6 +89,6 @@ public class FederatedIdentityAuthenticationSuccessHandler implements Authentica
         }
 
         // Delegate to the default handler to manage the redirect
-        this.delegate.onAuthenticationSuccess(request, response, authentication);
+        this.delegate.onAuthenticationSuccess(request, response, authenticationToUse);
     }
 }

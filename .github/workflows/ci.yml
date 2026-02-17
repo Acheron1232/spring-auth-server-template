@@ -61,26 +61,6 @@ jobs:
 
       - name: Run auth-server tests
         run: ./gradlew clean test
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/auth_server_test
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
-          SPRING_DATA_REDIS_HOST: localhost
-          SPRING_DATA_REDIS_PORT: 6379
-          AUTH_SERVER_CLIENT_ID: test-client
-          AUTH_SERVER_CLIENT_SECRET: test-secret
-          GOOGLE_CLIENT_ID: test
-          GOOGLE_CLIENT_SECRET: test
-          GITHUB_CLIENT_ID: test
-          GITHUB_CLIENT_SECRET: test
-          MAIL_HOST: localhost
-          MAIL_PORT: 1025
-          MAIL_USERNAME: test
-          MAIL_PASSWORD: test
-          AWS_PUBLIC_KEY: test
-          AWS_PRIVATE_KEY: test
-          AWS_ARN: arn:aws:kms:eu-north-1:000000000000:key/test
-          AWS_BUCKET_NAME: test
 
       - name: Run gateway tests
         run: |

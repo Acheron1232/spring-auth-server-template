@@ -50,30 +50,8 @@ services:
     restart: unless-stopped
     ports:
       - "9000:9000"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_server
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      SERVER_PORT: 9000
-      # Override these with your own values via .env or environment
-      AUTH_SERVER_CLIENT_ID: ${AUTH_SERVER_CLIENT_ID:-auth-server-service}
-      AUTH_SERVER_CLIENT_SECRET: ${AUTH_SERVER_CLIENT_SECRET:-super-secret}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      MAIL_HOST: ${MAIL_HOST:-smtp.example.com}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      AWS_PUBLIC_KEY: ${AWS_PUBLIC_KEY:-}
-      AWS_PRIVATE_KEY: ${AWS_PRIVATE_KEY:-}
-      AWS_REGION: ${AWS_REGION:-eu-north-1}
-      AWS_ARN: ${AWS_ARN:-}
-      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME:-}
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,12 +65,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_REDIS_HOST: redis-gateway
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_AUTH_SERVER_ISSUER_URI: http://auth-server:9000
-      SERVER_PORT: 8080
+    env_file:
+      - .env
     depends_on:
       auth-server:
         condition: service_healthy

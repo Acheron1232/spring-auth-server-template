@@ -2,8 +2,8 @@ spring:
   application:
     name: auth-server-test
 
-  profiles:
-    active: test
+#  profiles:
+#    active: test
 
   docker:
     compose:

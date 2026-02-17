@@ -8,6 +8,7 @@ import com.acheron.authserver.dto.request.UserPutRequest;
 import com.acheron.authserver.dto.response.UserResponse;
 import com.acheron.authserver.dto.util.UnifiedUserDto;
 import com.acheron.authserver.entity.*;
+import com.acheron.authserver.exception.AppException;
 import com.acheron.authserver.mapper.UserMapper;
 import com.acheron.authserver.repository.FederatedIdentityRepository;
 import com.acheron.authserver.repository.UserRepository;
@@ -124,7 +125,7 @@ public class UserService implements UserDetailsService {
 
     // oauth methods
     @Transactional
-    public void saveOauthUser(String providerId, OAuth2User oauth2User) {
+    public User saveOauthUser(String providerId, OAuth2User oauth2User) {
         UnifiedUserDto dto = extractUserDto(providerId, oauth2User);
 
         Optional<User> existingUser = userRepository.findUserByEmail(dto.getEmail());
@@ -143,6 +144,8 @@ public class UserService implements UserDetailsService {
             FederatedIdentity identity = userMapper.toFederatedIdentity(dto, user);
             federatedIdentityRepository.save(identity);
         }
+
+        return user;
     }
 
     public UnifiedUserDto extractUserDto(String registrationId, OAuth2User oauth2User) {
@@ -253,7 +256,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User findByEmail(String email) {
-        return userRepository.findUserByEmail(email).orElseThrow(); //TODO
+        return userRepository.findUserByEmail(email).orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND)); //TODO
     }
 
     public User save(User user) {
