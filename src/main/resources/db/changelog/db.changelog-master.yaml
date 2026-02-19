@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/db-changelog-002-auth-server-tables.sql
   - include:
       file: db/changelog/db-changelog-003-resrt-password-email-confirmation-token-mail-tables.sql
+  - include:
+      file: db/changelog/db-changelog-004-auth-history-token-version.sql
+  - include:
+      file: db/changelog/db-changelog-005-gateway-client.sql

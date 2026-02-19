@@ -1,5 +1,6 @@
 package com.acheron.authserver.config;
 
+import com.acheron.authserver.service.AuthHistoryService;
 import com.acheron.authserver.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +44,7 @@ public class FederatedIdentityAuthenticationSuccessHandler implements Authentica
 
     private final AuthenticationSuccessHandler delegate = new SavedRequestAwareAuthenticationSuccessHandler();
     private final UserService userService;
+    private final AuthHistoryService authHistoryService;
 
     /**
      * Called when a user has been successfully authenticated.
@@ -82,6 +84,8 @@ public class FederatedIdentityAuthenticationSuccessHandler implements Authentica
                 localAuth.setDetails(authentication.getDetails());
                 SecurityContextHolder.getContext().setAuthentication(localAuth);
                 authenticationToUse = localAuth;
+
+                authHistoryService.recordLogin(localUser, request, registrationId.toUpperCase());
             } catch (Exception e) {
                 // Log the error but allow the login to proceed (or handle as a fatal error depending on requirements)
                 log.error("Error saving OAuth2 user", e);

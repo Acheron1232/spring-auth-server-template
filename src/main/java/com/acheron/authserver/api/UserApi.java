@@ -11,10 +11,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.jboss.aerogear.security.otp.Totp;
+import org.jboss.aerogear.security.otp.api.Base32;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +28,9 @@ import java.awt.image.BufferedImage;
 public class UserApi {
     private final UserService userService;
     private final QrCodeService qrCodeService;
+
+    @Value("${spring.application.name:AuthServer}")
+    private String appName;
 
     @GetMapping
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
@@ -62,8 +67,8 @@ public class UserApi {
     }
 
     @PostMapping("/confirmEmail")
-    public ResponseEntity<String> confirmEmail(@AuthenticationPrincipal Jwt jwt) {
-        return userService.confirmEmail((String) jwt.getClaims().get("name"));
+    public ResponseEntity<String> confirmEmail(@AuthenticationPrincipal User user) {
+        return userService.confirmEmail(user.getUsername());
     }
 
     @GetMapping("/confirm")
@@ -76,15 +81,60 @@ public class UserApi {
         return userService.resetPassword(passwordResetRequest.email());
     }
 
-    @GetMapping("/resetPassword")
-    public ResponseEntity<String> reset(@RequestParam("token") String token) {
-        return ResponseEntity.ok(userService.reset(token));
+    @PostMapping("/resetPassword/confirm")
+    public ResponseEntity<String> confirmResetPassword(
+            @RequestParam("token") String token,
+            @RequestParam("password") String newPassword) {
+        return userService.resetPasswordWithToken(token, newPassword);
     }
 
-    @GetMapping(value = "/mfa_qr", produces = {MediaType.IMAGE_PNG_VALUE})
+    @GetMapping(value = "/mfa/qr", produces = {MediaType.IMAGE_PNG_VALUE})
     @ResponseBody
-    public BufferedImage getQrCode() {
-        System.out.println("asd");
-        return qrCodeService.generateQrCode("Talent", "aryemfedorov@gmail.com", "K4RJK7LR3FFUSTCG");
+    public BufferedImage getQrCode(@AuthenticationPrincipal User user) {
+        if (user.getMfaSecret() == null || user.getMfaSecret().isBlank()) {
+            throw new IllegalStateException("MFA is not configured for this user. Call POST /user-info/mfa/setup first.");
+        }
+        return qrCodeService.generateQrCode(appName, user.getEmail(), user.getMfaSecret());
     }
+
+    @PostMapping("/mfa/setup")
+    public ResponseEntity<MfaSetupResponse> setupMfa(@AuthenticationPrincipal User user) {
+        String secret = Base32.random();
+        user.setMfaSecret(secret);
+        userService.save(user);
+        return ResponseEntity.ok(new MfaSetupResponse(secret));
+    }
+
+    @PostMapping("/mfa/verify")
+    public ResponseEntity<String> verifyAndEnableMfa(
+            @AuthenticationPrincipal User user,
+            @RequestParam String code) {
+        if (user.getMfaSecret() == null || user.getMfaSecret().isBlank()) {
+            return ResponseEntity.badRequest().body("MFA secret not set. Call POST /user-info/mfa/setup first.");
+        }
+        if (!new Totp(user.getMfaSecret()).verify(code)) {
+            return ResponseEntity.badRequest().body("Invalid TOTP code");
+        }
+        user.setMfaEnabled(true);
+        userService.save(user);
+        return ResponseEntity.ok("MFA enabled successfully");
+    }
+
+    @PostMapping("/mfa/disable")
+    public ResponseEntity<String> disableMfa(
+            @AuthenticationPrincipal User user,
+            @RequestParam String code) {
+        if (!user.isMfaEnabled()) {
+            return ResponseEntity.badRequest().body("MFA is not enabled");
+        }
+        if (!new Totp(user.getMfaSecret()).verify(code)) {
+            return ResponseEntity.badRequest().body("Invalid TOTP code");
+        }
+        user.setMfaEnabled(false);
+        user.setMfaSecret(null);
+        userService.save(user);
+        return ResponseEntity.ok("MFA disabled successfully");
+    }
+
+    public record MfaSetupResponse(String secret) {}
 }

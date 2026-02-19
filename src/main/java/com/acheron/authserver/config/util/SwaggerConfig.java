@@ -6,6 +6,9 @@ import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.security.OAuthFlow;
+import io.swagger.v3.oas.models.security.OAuthFlows;
+import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
@@ -26,41 +29,57 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
-        final String securitySchemeName = "bearerAuth";
+        final String bearerScheme = "bearerAuth";
+        final String oauth2Scheme = "oauth2";
+        String serverUrl = "http://localhost:" + serverPort;
 
         return new OpenAPI()
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .addSecurityItem(new SecurityRequirement().addList(bearerScheme))
                 .components(new Components()
-                        .addSecuritySchemes(securitySchemeName,
+                        .addSecuritySchemes(bearerScheme,
                                 new SecurityScheme()
-                                        .name(securitySchemeName)
+                                        .name(bearerScheme)
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("Enter your JWT Access Token here to access protected endpoints.")
-                        )
+                                        .description("Paste your JWT access token here."))
+                        .addSecuritySchemes(oauth2Scheme,
+                                new SecurityScheme()
+                                        .name(oauth2Scheme)
+                                        .type(SecurityScheme.Type.OAUTH2)
+                                        .flows(new OAuthFlows()
+                                                .authorizationCode(new OAuthFlow()
+                                                        .authorizationUrl(serverUrl + "/oauth2/authorize")
+                                                        .tokenUrl(serverUrl + "/oauth2/token")
+                                                        .scopes(new Scopes()
+                                                                .addString("openid", "OpenID Connect")
+                                                                .addString("profile", "User profile")
+                                                                .addString("email", "User email")
+                                                                .addString("message.read", "Read access")))))
                 )
                 .servers(List.of(
-                        new Server().url("http://localhost:" + serverPort).description("Local Development")
-//                        new Server().url("https://auth.acheron.com").description("Production Server")
+                        new Server().url(serverUrl).description("Local Development")
                 ))
                 .info(new Info()
                         .title(applicationName + " API")
                         .version("1.0.0")
                         .description("""
                                 ### OAuth2 & OpenID Connect Authorization Server
-                                
-                                This is a production-ready Authorization Server based on Spring Security.
-                                
+
+                                Production-ready Authorization Server based on Spring Security OAuth2.
+
                                 **Key Features:**
-                                * **OAuth 2.1 Support** (Authorization Code, Refresh Token, Client Credentials)
-                                * **OIDC Compliant** (UserInfo, ID Token)
-                                * **MFA Protection** (Time-based OTP via Google Authenticator)
-                                * **JWK Source** (Rotational keys support)
-                                
+                                * OAuth 2.1 (Authorization Code, Refresh Token, Client Credentials)
+                                * OIDC Compliant (UserInfo, ID Token, JWKS)
+                                * MFA / TOTP (Google Authenticator)
+                                * Refresh token reuse detection with token versioning
+                                * Dynamic CORS from registered client redirect URIs
+                                * Redis session store
+                                * Federated identity (Google, GitHub)
+
                                 **How to test:**
-                                1. Obtain an access token via `/oauth2/token`.
-                                2. Click **Authorize** button above and paste the token.
+                                1. Obtain an access token via `POST /oauth2/token`.
+                                2. Click **Authorize** and paste the token.
                                 """)
                         .contact(new Contact()
                                 .name("Acheron")

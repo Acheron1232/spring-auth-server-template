@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'com.acheron'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 description = 'auth-server'
 
 java {
@@ -35,23 +35,25 @@ sourceSets {
 }
 
 dependencies {
-    var swaggerUi = "3.0.1"
     var aws = "2.41.1"
     var zxing = "3.5.3"
     var otp = "1.0.0"
     var mapStruct = "1.6.3"
     var mapStructLombok = "0.2.0"
+    var springdoc = "3.0.1"
 
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdoc}"
     implementation "org.jboss.aerogear:aerogear-otp-java:${otp}"
     implementation "com.google.zxing:javase:${zxing}"
     implementation "org.mapstruct:mapstruct:${mapStruct}"
     implementation "org.projectlombok:lombok-mapstruct-binding:${mapStructLombok}"
     implementation "software.amazon.awssdk:kms:${aws}"
     implementation "software.amazon.awssdk:s3:${aws}"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${swaggerUi}"
 
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-session-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

@@ -1,0 +1,28 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: alt-clothes-shop
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/shopdb}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_SERVER_URL:http://localhost:9000}
+
+app:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}

@@ -22,8 +22,8 @@ public class OAuth2PublicClientRefreshTokenGenerator implements OAuth2TokenGener
             return null;
         }
 
-        if (!ClientAuthenticationMethod.NONE.equals(
-                context.getRegisteredClient().getClientAuthenticationMethods().iterator().next())) {
+        if (!context.getRegisteredClient().getClientAuthenticationMethods()
+                .contains(ClientAuthenticationMethod.NONE)) {
             return null;
         }
 

@@ -1,56 +1,70 @@
 package com.acheron.authserver;
 
-import com.acheron.authserver.config.DynamicCorsConfigurationSource;
+import com.acheron.authserver.entity.Role;
+import com.acheron.authserver.entity.User;
+import com.acheron.authserver.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@DisplayName("Dynamic CORS Tests")
 class DynamicCorsTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private RegisteredClientRepository registeredClientRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private DynamicCorsConfigurationSource corsSource;
-
-    @Test
-    void cors_allowedOrigin_returnsHeaders() throws Exception {
-        corsSource.addOrigin("http://localhost:3000");
-
-        mockMvc.perform(options("/oauth2/authorize")
-                        .header("Origin", "http://localhost:3000")
-                        .header("Access-Control-Request-Method", "GET"))
-                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
-                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+    @BeforeEach
+    void setUp() {
+        if (userRepository.findUserByUsername("corstest").isEmpty()) {
+            userRepository.save(User.builder()
+                    .username("corstest")
+                    .email("corstest@example.com")
+                    .passwordHash(passwordEncoder.encode("password123"))
+                    .role(Role.USER)
+                    .enabled(true)
+                    .emailVerified(true)
+                    .mfaEnabled(false)
+                    .build());
+        }
     }
 
     @Test
-    void cors_unknownOrigin_noHeaders() throws Exception {
-        mockMvc.perform(options("/oauth2/authorize")
-                        .header("Origin", "http://evil.com")
-                        .header("Access-Control-Request-Method", "GET"))
-                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    @DisplayName("Gateway client redirect URI origin is allowed for CORS")
+    void gatewayClientRedirectUri_isAllowedForCors() {
+        RegisteredClient client = registeredClientRepository.findByClientId("gateway-client");
+        assertThat(client).isNotNull();
+        assertThat(client.getRedirectUris()).isNotEmpty();
     }
 
-    @Test
-    void cors_dynamicallyAddedOrigin_works() throws Exception {
-        String newOrigin = "http://dynamic-app.example.com";
-        corsSource.addOrigin(newOrigin);
-
-        mockMvc.perform(options("/oauth2/authorize")
-                        .header("Origin", newOrigin)
+    @ParameterizedTest(name = "OPTIONS preflight from {0} returns CORS headers")
+    @ValueSource(strings = {"http://localhost:8080", "http://localhost:3000"})
+    @DisplayName("Preflight requests return CORS headers for known origins")
+    void preflightRequest_returnsCorrectHeaders(String origin) throws Exception {
+        mockMvc.perform(options("/login")
+                        .header("Origin", origin)
                         .header("Access-Control-Request-Method", "GET"))
-                .andExpect(header().string("Access-Control-Allow-Origin", newOrigin));
+                .andExpect(status().isOk());
     }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Registration</title>
+    <title>Create Account</title>
     <link rel="stylesheet" href="/front/style.css">
 </head>
 <body>
@@ -16,27 +16,38 @@
             <p class="auth-subtitle">Secure sign-up with optional MFA</p>
         </header>
 
-        <form class="auth-form" data-auth-form action="/registration" method="post" novalidate>
+        <form class="auth-form" action="/registration" method="post"
+              th:object="${registrationRequest}" novalidate>
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
             <div class="field">
                 <label class="field-label" for="reg_username">Username</label>
-                <input id="reg_username" type="text" name="username" class="auth-input" placeholder="yourname" autocomplete="username" required minlength="3" maxlength="32">
-                <div class="field-hint" data-field-error="username" aria-live="polite"></div>
+                <input id="reg_username" type="text" th:field="*{username}"
+                       class="auth-input" th:classappend="${#fields.hasErrors('username')} ? ' is-error'"
+                       placeholder="yourname" autocomplete="username" required minlength="3" maxlength="32">
+                <div class="field-hint is-error" th:if="${#fields.hasErrors('username')}"
+                     th:errors="*{username}" aria-live="polite"></div>
             </div>
 
             <div class="field">
                 <label class="field-label" for="reg_email">Email</label>
-                <input id="reg_email" type="email" name="email" class="auth-input" placeholder="name@example.com" autocomplete="email" required>
-                <div class="field-hint" data-field-error="email" aria-live="polite"></div>
+                <input id="reg_email" type="email" th:field="*{email}"
+                       class="auth-input" th:classappend="${#fields.hasErrors('email')} ? ' is-error'"
+                       placeholder="name@example.com" autocomplete="email" required>
+                <div class="field-hint is-error" th:if="${#fields.hasErrors('email')}"
+                     th:errors="*{email}" aria-live="polite"></div>
             </div>
 
             <div class="field">
                 <label class="field-label" for="reg_password">Password</label>
                 <div class="field-with-action">
-                    <input id="reg_password" type="password" name="password" class="auth-input" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8">
+                    <input id="reg_password" type="password" th:field="*{password}"
+                           class="auth-input" th:classappend="${#fields.hasErrors('password')} ? ' is-error'"
+                           placeholder="At least 8 characters" autocomplete="new-password" required minlength="8">
                     <button class="field-action" type="button" data-toggle-password aria-label="Show password">Show</button>
                 </div>
-                <div class="field-hint" data-field-error="password" aria-live="polite"></div>
+                <div class="field-hint is-error" th:if="${#fields.hasErrors('password')}"
+                     th:errors="*{password}" aria-live="polite"></div>
                 <div class="field-meta">
                     <div class="strength" data-strength aria-hidden="true">
                         <span class="strength-bar"></span>
@@ -49,19 +60,16 @@
                 <div class="mfa-head">
                     <div>
                         <h2 class="mfa-title">Multi-factor authentication</h2>
-                        <p class="mfa-subtitle">Recommended. Scan the QR code with your authenticator app.</p>
+                        <p class="mfa-subtitle">Recommended. Scan the QR code with your authenticator app after registration.</p>
                     </div>
                     <label class="toggle" for="mfa_enabled">
-                        <input type="checkbox" value="true" name="mfa_enabled" id="mfa_enabled" data-mfa-toggle>
+                        <input type="checkbox" value="true" th:field="*{mfaEnabled}" id="mfa_enabled" data-mfa-toggle>
                         <span class="toggle-ui" aria-hidden="true"></span>
                         <span class="toggle-label">Enable MFA</span>
                     </label>
                 </div>
                 <div class="mfa-body" data-mfa-panel hidden>
-                    <div class="qr-wrap">
-                        <img class="qr" src="/mfa_qr" alt="MFA QR code">
-                    </div>
-                    <p class="mfa-note">You will be asked for the 6-digit code during login.</p>
+                    <p class="mfa-note">MFA will be configured after account creation. You will be prompted to scan a QR code on first login.</p>
                 </div>
             </section>
 

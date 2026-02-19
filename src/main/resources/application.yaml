@@ -2,6 +2,8 @@ spring:
   application:
     name: auth-server
 
+  profiles:
+    active: dev
   security:
     oauth2:
       client:
@@ -48,9 +50,6 @@ spring:
     virtual:
       enabled: true
 
-  profiles:
-    active: dev
-
   config:
     import: file:.env[.properties]
 
@@ -59,11 +58,21 @@ spring:
       file: local-infra/docker-compose.yaml
 
   jpa:
-    open-in-view: true
+    open-in-view: false
 
   main:
     banner-mode: off
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  session:
+    data:
+      redis:
+        namespace: auth:session
+        repository-type: default
 
   mail:
     host: ${MAIL_HOST}
@@ -77,9 +86,12 @@ spring:
           starttls:
             enable: true
 
+app:
+  base-url: ${APP_BASE_URL:http://localhost:9000}
+
 gateway:
   client:
-    secret: ${GATEWAY_CLIENT_SECRET:gateway-client-secret}
+    secret: ${GATEWAY_CLIENT_SECRET}
 
 aws:
   public_key: ${AWS_PUBLIC_KEY}
@@ -88,11 +100,20 @@ aws:
   arn: ${AWS_ARN}
   bucket_name: ${AWS_BUCKET_NAME}
 
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,info,prometheus
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
+
+server:
+  forward-headers-strategy: framework

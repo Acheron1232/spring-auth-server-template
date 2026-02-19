@@ -1,6 +1,8 @@
 package com.acheron.authserver.api;
 
 import com.acheron.authserver.dto.request.UserPatchRequest;
+import com.acheron.authserver.repository.AuthHistoryRepository;
+import com.acheron.authserver.service.SessionManagementService;
 import com.acheron.authserver.entity.User;
 import com.acheron.authserver.service.UserService;
 import jakarta.validation.Valid;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequiredArgsConstructor
 public class ProfileController {
     private final UserService userService;
+    private final AuthHistoryRepository authHistoryRepository;
+    private final SessionManagementService sessionManagementService;
 
     public record ProfileUpdateForm(
             @Pattern(regexp = "^[a-zA-Z0-9._-]{3,}$", message = "Username must be at least 3 chars")
@@ -36,13 +40,22 @@ public class ProfileController {
     public String profile(
             @AuthenticationPrincipal User user,
             @RequestParam(value = "updated", required = false) String updated,
+            @RequestParam(value = "revoked", required = false) String revoked,
             Model model) {
 
         ProfileUpdateForm form = new ProfileUpdateForm(user.getUsername(), user.getEmail(), user.isMfaEnabled());
         model.addAttribute("profile", form);
         model.addAttribute("updated", updated != null);
+        model.addAttribute("revoked", revoked != null);
         model.addAttribute("emailVerified", user.isEmailVerified());
+        model.addAttribute("loginHistory", authHistoryRepository.findTop10ByUserOrderByTimestampDesc(user));
         return "profile";
+    }
+
+    @PostMapping("/profile/revoke")
+    public String revokeAllSessions(@AuthenticationPrincipal User user) {
+        sessionManagementService.revokeAllSessions(user);
+        return "redirect:/profile?revoked=true";
     }
 
     @PostMapping("/profile")
@@ -54,7 +67,9 @@ public class ProfileController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("updated", false);
+            model.addAttribute("revoked", false);
             model.addAttribute("emailVerified", user.isEmailVerified());
+            model.addAttribute("loginHistory", authHistoryRepository.findTop10ByUserOrderByTimestampDesc(user));
             return "profile";
         }
 

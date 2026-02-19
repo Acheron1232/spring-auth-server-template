@@ -31,7 +31,6 @@ public class FederatedIdentity extends AbstractAuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    @ToString.Exclude
     private User user;
 
     @ToString.Include(name = "userId")
@@ -56,23 +55,19 @@ public class FederatedIdentity extends AbstractAuditableEntity {
     // OAuth tokens (encrypted!)
     @Column(name = "access_token", columnDefinition = "TEXT")
     @JsonIgnore
-    @ToString.Exclude
     private String accessToken;
 
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     @JsonIgnore
-    @ToString.Exclude
     private String refreshToken;
 
     @Column(name = "token_expires_at")
     @JsonIgnore
-    @ToString.Exclude
     private Instant tokenExpiresAt;
 
     // Provider-specific metadata
     @Column(columnDefinition = "JSONB")
     @JdbcTypeCode(SqlTypes.JSON)
     @JsonIgnore
-    @ToString.Exclude
     private Map<String, Object> providerMetadata;
 }

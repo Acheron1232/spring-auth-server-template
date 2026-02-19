@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Admin — Clients</title>
+    <link rel="stylesheet" href="/front/style.css">
+    <link rel="stylesheet" href="/front/admin.css">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+    <div class="admin-nav-brand">
+        <div class="auth-mark" style="width:32px;height:32px;border-radius:10px;"></div>
+        <span>AuthServer Admin</span>
+    </div>
+    <ul class="admin-nav-links">
+        <li><a href="/admin">Dashboard</a></li>
+        <li><a href="/admin/users">Users</a></li>
+        <li><a href="/admin/clients" class="active">Clients</a></li>
+        <li><a href="/profile">Profile</a></li>
+        <li>
+            <form action="/spa/logout" method="post" style="margin:0">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="nav-logout-btn">Logout</button>
+            </form>
+        </li>
+    </ul>
+</nav>
+<main class="admin-main">
+    <header class="admin-page-header">
+        <h1>OAuth2 Clients</h1>
+        <p class="admin-subtitle">Register and manage OAuth2 clients</p>
+    </header>
+
+    <div class="admin-card">
+        <h2 class="admin-card-title">Register New Client</h2>
+        <form id="registerClientForm" class="auth-form" style="max-width:520px">
+            <div class="field">
+                <label class="field-label">Client ID</label>
+                <input type="text" id="clientId" class="auth-input" placeholder="my-app" required/>
+            </div>
+            <div class="field">
+                <label class="field-label">Client Secret <span style="color:var(--muted)">(leave blank for public client)</span></label>
+                <input type="password" id="clientSecret" class="auth-input" placeholder="Optional"/>
+            </div>
+            <div class="field">
+                <label class="field-label">Redirect URIs <span style="color:var(--muted)">(comma-separated)</span></label>
+                <input type="text" id="redirectUris" class="auth-input" placeholder="http://localhost:3000/callback" required/>
+            </div>
+            <div class="field">
+                <label class="field-label">Scopes <span style="color:var(--muted)">(comma-separated)</span></label>
+                <input type="text" id="scopes" class="auth-input" value="openid,profile,email" required/>
+            </div>
+            <div class="field" style="display:flex;gap:20px;align-items:center">
+                <label class="toggle">
+                    <input type="checkbox" id="requirePkce"/>
+                    <span class="toggle-ui"></span>
+                    <span class="toggle-label">Require PKCE</span>
+                </label>
+                <label class="toggle">
+                    <input type="checkbox" id="requireConsent"/>
+                    <span class="toggle-ui"></span>
+                    <span class="toggle-label">Require Consent</span>
+                </label>
+            </div>
+            <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div>
+                    <label class="field-label">Access Token TTL (minutes)</label>
+                    <input type="number" id="accessTokenTtl" class="auth-input" value="5" min="1"/>
+                </div>
+                <div>
+                    <label class="field-label">Refresh Token TTL (days)</label>
+                    <input type="number" id="refreshTokenTtl" class="auth-input" value="20" min="1"/>
+                </div>
+            </div>
+            <div class="message" id="clientMsg" role="status" aria-live="polite"></div>
+            <button type="submit" class="auth-button" data-submit>
+                <span class="btn-label">Register Client</span>
+                <span class="btn-spinner" aria-hidden="true"></span>
+            </button>
+        </form>
+    </div>
+
+    <div class="admin-card" style="margin-top:20px">
+        <h2 class="admin-card-title">API Reference</h2>
+        <p style="font-size:13px;color:var(--muted)">
+            Clients can also be registered via the REST API:
+            <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:6px">POST /admin/api/clients</code>
+            with a Bearer token (ADMIN role required).
+        </p>
+    </div>
+</main>
+<script src="/front/admin.js"></script>
+</body>
+</html>

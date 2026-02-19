@@ -2,8 +2,10 @@ server:
   port: 9000
 
 spring:
+#  profiles:
+#    active: dev
 
-  origins: "http://localhost:5173,http://localhost:3000,https://localhost:5173,https://localhost:3000" # can be removed in production
+  origins: "http://localhost:5173,http://localhost:3000,https://localhost:5173,https://localhost:3000"
 
   jpa:
     show-sql: true
@@ -11,12 +13,5 @@ spring:
 springdoc:
   api-docs:
     enabled: true
-
   swagger-ui:
     enabled: true
-
-#logging:
-#  level:
-#    com.acheron.authserver: DEBUG
-#    org.springframework.security: TRACE
-#    org.springframework.security.oauth2: TRACE

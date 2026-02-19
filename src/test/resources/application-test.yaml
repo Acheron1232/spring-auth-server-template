@@ -2,17 +2,20 @@ spring:
   application:
     name: auth-server-test
 
-#  profiles:
-#    active: test
-
   docker:
     compose:
       enabled: false
 
   jpa:
-    open-in-view: true
+    open-in-view: false
     hibernate:
       ddl-auto: none
+
+  session:
+    store-type: none
+
+  cache:
+    type: none
 
   main:
     banner-mode: off
@@ -52,6 +55,10 @@ spring:
   threads:
     virtual:
       enabled: true
+
+app:
+  base-url: http://localhost:9000
+  gateway-client-secret: test-gateway-secret
 
 aws:
   public_key: test-key

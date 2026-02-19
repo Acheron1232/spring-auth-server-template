@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:18-alpine3.23
+    environment:
+      POSTGRES_DB: shopdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - shop_pg_data:/var/lib/postgresql/data
+
+#  shop-app:
+#    build: ./app
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      DB_URL: jdbc:postgresql://postgres:5432/shopdb
+#      DB_USER: postgres
+#      DB_PASS: postgres
+#      AUTH_SERVER_URL: http://host.docker.internal:9000
+#      ALLOWED_ORIGINS: http://localhost:5173
+#    depends_on:
+#      - postgres
+
+volumes:
+  shop_pg_data:

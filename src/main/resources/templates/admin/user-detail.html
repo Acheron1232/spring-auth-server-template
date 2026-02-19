@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Admin — User Detail</title>
+    <link rel="stylesheet" href="/front/style.css">
+    <link rel="stylesheet" href="/front/admin.css">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+    <div class="admin-nav-brand">
+        <div class="auth-mark" style="width:32px;height:32px;border-radius:10px;"></div>
+        <span>AuthServer Admin</span>
+    </div>
+    <ul class="admin-nav-links">
+        <li><a href="/admin">Dashboard</a></li>
+        <li><a href="/admin/users" class="active">Users</a></li>
+        <li><a href="/admin/clients">Clients</a></li>
+        <li><a href="/profile">Profile</a></li>
+        <li>
+            <form action="/spa/logout" method="post" style="margin:0">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="nav-logout-btn">Logout</button>
+            </form>
+        </li>
+    </ul>
+</nav>
+<main class="admin-main">
+    <div class="admin-back"><a href="/admin/users">&larr; Back to Users</a></div>
+    <header class="admin-page-header">
+        <h1 th:text="${user.username}">User</h1>
+        <p class="admin-subtitle" th:text="${user.email}"></p>
+    </header>
+
+    <div class="message is-success" th:if="${param.updated}" role="status">Updated successfully.</div>
+    <div class="message is-success" th:if="${param.revoked}" role="status">Sessions revoked.</div>
+
+    <div class="admin-detail-grid">
+        <div class="admin-card">
+            <h2 class="admin-card-title">User Info</h2>
+            <dl class="detail-list">
+                <dt>ID</dt><dd th:text="${user.id}"></dd>
+                <dt>Username</dt><dd th:text="${user.username}"></dd>
+                <dt>Email</dt><dd th:text="${user.email}"></dd>
+                <dt>Email Verified</dt>
+                <dd>
+                    <span class="badge badge--green" th:if="${user.emailVerified}">Yes</span>
+                    <span class="badge badge--red" th:if="${!user.emailVerified}">No</span>
+                </dd>
+                <dt>Role</dt>
+                <dd><span class="badge badge--purple" th:text="${user.role}"></span></dd>
+                <dt>MFA</dt>
+                <dd>
+                    <span class="badge badge--green" th:if="${user.mfaEnabled}">Enabled</span>
+                    <span class="badge badge--muted" th:if="${!user.mfaEnabled}">Disabled</span>
+                </dd>
+                <dt>Status</dt>
+                <dd>
+                    <span class="badge badge--green" th:if="${user.enabled and !user.locked}">Active</span>
+                    <span class="badge badge--red" th:if="${user.locked}">Locked</span>
+                    <span class="badge badge--muted" th:if="${!user.enabled}">Disabled</span>
+                </dd>
+            </dl>
+        </div>
+
+        <div class="admin-card">
+            <h2 class="admin-card-title">Actions</h2>
+            <div class="admin-actions-grid">
+                <form th:action="@{/admin/users/{id}/role(id=${user.id})}" method="post" class="admin-action-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <label class="field-label">Change Role</label>
+                    <div class="field-row">
+                        <select name="role" class="auth-input">
+                            <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"
+                                    th:selected="${r == user.role}"></option>
+                        </select>
+                        <button type="submit" class="auth-button">Set</button>
+                    </div>
+                </form>
+
+                <form th:action="@{/admin/users/{id}/lock(id=${user.id})}" method="post" class="admin-action-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="locked" th:value="${!user.locked}"/>
+                    <button type="submit" class="auth-button"
+                            th:text="${user.locked} ? 'Unlock Account' : 'Lock Account'"
+                            th:classappend="${user.locked} ? '' : ' is-danger-outline'"></button>
+                </form>
+
+                <form th:action="@{/admin/users/{id}/enable(id=${user.id})}" method="post" class="admin-action-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="enabled" th:value="${!user.enabled}"/>
+                    <button type="submit" class="auth-button"
+                            th:text="${user.enabled} ? 'Disable Account' : 'Enable Account'"></button>
+                </form>
+
+                <form th:action="@{/admin/users/{id}/revoke(id=${user.id})}" method="post" class="admin-action-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="auth-button">Revoke All Sessions</button>
+                </form>
+            </div>
+
+            <div class="danger" style="margin-top:16px">
+                <p class="danger-text">Permanently delete this user and all associated data.</p>
+                <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post"
+                      onsubmit="return confirm('Delete this user permanently?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="danger-button">Delete User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card" style="margin-top:20px">
+        <h2 class="admin-card-title">Login History</h2>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                <tr><th>Time</th><th>IP</th><th>Location</th><th>Device</th><th>Method</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="h : ${loginHistory}">
+                    <td th:text="${#temporals.format(h.timestamp, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td th:text="${h.ipAddress}"></td>
+                    <td th:text="${h.location}"></td>
+                    <td th:text="${h.userAgent}"></td>
+                    <td th:text="${h.loginMethod}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(loginHistory)}">
+                    <td colspan="5" style="color:var(--muted);text-align:center">No login events.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<script src="/front/admin.js"></script>
+</body>
+</html>

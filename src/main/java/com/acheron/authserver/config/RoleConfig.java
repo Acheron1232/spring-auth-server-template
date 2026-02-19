@@ -10,10 +10,6 @@ public class RoleConfig {
 
     @Bean
     public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl
-                .withDefaultRolePrefix()
-                .role("ADMIN")
-                .implies("USER")
-                .build();
+        return RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN > ROLE_USER");
     }
 }

@@ -22,6 +22,7 @@ import java.util.*;
 @Table(name = "users")
 @Entity
 public class User extends AbstractAuditableEntity implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @ToString.Include
@@ -38,7 +39,6 @@ public class User extends AbstractAuditableEntity implements UserDetails {
     // Optional: NULL for OAuth-only users
     @Column(name = "password_hash")
     @JsonIgnore
-    @ToString.Exclude
     private String passwordHash;
 
     @Column(nullable = false)
@@ -59,6 +59,10 @@ public class User extends AbstractAuditableEntity implements UserDetails {
 
     @Column(name = "mfa_secret")
     private String mfaSecret;
+
+    @Column(name = "token_version", nullable = false)
+    @Builder.Default
+    private UUID tokenVersion = UUID.randomUUID();
 
     // Relationships
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

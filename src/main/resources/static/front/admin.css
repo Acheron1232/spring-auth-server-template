@@ -1,0 +1,369 @@
+/* ── Admin Layout ─────────────────────────────────────────────────────────── */
+.admin-body {
+    margin: 0;
+    font-family: "Roboto", sans-serif;
+    color: var(--text);
+    background: var(--bg-1);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 58px;
+    background: rgba(7, 9, 18, 0.92);
+    border-bottom: 1px solid var(--stroke);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.admin-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.admin-nav-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.admin-nav-links a {
+    display: block;
+    padding: 6px 14px;
+    border-radius: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 150ms, color 150ms;
+}
+
+.admin-nav-links a:hover,
+.admin-nav-links a.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.nav-logout-btn {
+    background: none;
+    border: 1px solid rgba(251, 113, 133, 0.4);
+    color: rgba(251, 113, 133, 0.85);
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 150ms;
+}
+
+.nav-logout-btn:hover {
+    background: rgba(251, 113, 133, 0.1);
+}
+
+.admin-main {
+    flex: 1;
+    padding: 32px 36px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.admin-page-header {
+    margin-bottom: 28px;
+}
+
+.admin-page-header h1 {
+    margin: 0;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+}
+
+.admin-subtitle {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.admin-back {
+    margin-bottom: 16px;
+}
+
+.admin-back a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 150ms;
+}
+
+.admin-back a:hover {
+    color: var(--text);
+}
+
+/* ── Stat Cards ───────────────────────────────────────────────────────────── */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--card), rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--stroke);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    animation: rise 400ms cubic-bezier(.2, .9, .2, 1) both;
+}
+
+.stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.stat-icon--blue   { background: rgba(110, 168, 255, 0.15); border: 1px solid rgba(110, 168, 255, 0.3); }
+.stat-icon--purple { background: rgba(124, 58, 237, 0.15);  border: 1px solid rgba(124, 58, 237, 0.3); }
+.stat-icon--green  { background: rgba(52, 211, 153, 0.15);  border: 1px solid rgba(52, 211, 153, 0.3); }
+.stat-icon--red    { background: rgba(251, 113, 133, 0.15); border: 1px solid rgba(251, 113, 133, 0.3); }
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+/* ── Quick Links ──────────────────────────────────────────────────────────── */
+.admin-quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.quick-link-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--stroke);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 150ms, transform 150ms;
+}
+
+.quick-link-card:hover {
+    background: rgba(255, 255, 255, 0.09);
+    transform: translateY(-2px);
+}
+
+.quick-link-icon {
+    font-size: 26px;
+}
+
+/* ── Admin Card ───────────────────────────────────────────────────────────── */
+.admin-card {
+    padding: 22px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--card), rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--stroke);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.admin-card-title {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────────────────── */
+.admin-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+}
+
+.admin-search {
+    flex: 1;
+    max-width: 400px;
+}
+
+.admin-search-btn {
+    height: 44px;
+    padding: 0 20px;
+    font-size: 13px;
+}
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.badge--blue   { background: rgba(110, 168, 255, 0.15); color: rgba(110, 168, 255, 0.95); border: 1px solid rgba(110, 168, 255, 0.3); }
+.badge--purple { background: rgba(124, 58, 237, 0.15);  color: rgba(167, 139, 250, 0.95); border: 1px solid rgba(124, 58, 237, 0.3); }
+.badge--green  { background: rgba(52, 211, 153, 0.15);  color: rgba(52, 211, 153, 0.95);  border: 1px solid rgba(52, 211, 153, 0.3); }
+.badge--red    { background: rgba(251, 113, 133, 0.15); color: rgba(251, 113, 133, 0.95); border: 1px solid rgba(251, 113, 133, 0.3); }
+.badge--muted  { background: rgba(255, 255, 255, 0.07); color: var(--muted);              border: 1px solid var(--stroke); }
+
+/* ── Table actions ────────────────────────────────────────────────────────── */
+.table-action-btn {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(110, 168, 255, 0.12);
+    color: rgba(110, 168, 255, 0.9);
+    border: 1px solid rgba(110, 168, 255, 0.25);
+    font-size: 12px;
+    text-decoration: none;
+    transition: background 150ms;
+}
+
+.table-action-btn:hover {
+    background: rgba(110, 168, 255, 0.2);
+}
+
+/* ── Detail Grid ──────────────────────────────────────────────────────────── */
+.admin-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .admin-detail-grid { grid-template-columns: 1fr; }
+    .admin-main { padding: 20px 16px; }
+    .admin-nav { padding: 0 16px; }
+}
+
+.detail-list {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 10px 16px;
+    margin: 0;
+    font-size: 13px;
+}
+
+.detail-list dt {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.detail-list dd {
+    margin: 0;
+    color: var(--text);
+    word-break: break-all;
+}
+
+/* ── Admin Actions ────────────────────────────────────────────────────────── */
+.admin-actions-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.admin-action-form {
+    display: grid;
+    gap: 8px;
+}
+
+.field-row {
+    display: flex;
+    gap: 10px;
+}
+
+.field-row .auth-input {
+    flex: 1;
+}
+
+.field-row .auth-button {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.auth-button.is-danger-outline {
+    background: rgba(251, 113, 133, 0.12);
+    border: 1px solid rgba(251, 113, 133, 0.4);
+    color: rgba(251, 113, 133, 0.9);
+    box-shadow: none;
+}
+
+/* ── Pagination ───────────────────────────────────────────────────────────── */
+.pagination {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--stroke);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: background 150ms, color 150ms;
+}
+
+.page-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+}
+
+.page-btn--active {
+    background: rgba(110, 168, 255, 0.18);
+    border-color: rgba(110, 168, 255, 0.4);
+    color: rgba(110, 168, 255, 0.95);
+}

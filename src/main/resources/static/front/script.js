@@ -144,11 +144,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 setFieldError(form, "password", err);
                 ok = ok && !err;
             }
-            if (has2fa) {
+            if (has2fa && form["2facode"].value.trim()) {
                 const err = validate2fa(form["2facode"].value);
                 setFieldError(form, "2facode", err);
                 ok = ok && !err;
-
                 if (ok) {
                     form["2facode"].value = normalize2fa(form["2facode"].value);
                 }

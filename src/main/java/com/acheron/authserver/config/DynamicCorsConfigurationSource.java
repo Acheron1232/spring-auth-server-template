@@ -41,7 +41,7 @@ public class DynamicCorsConfigurationSource implements CorsConfigurationSource {
 
             for (String csv : redirectUris) {
                 if (csv != null && !csv.isBlank()) {
-                    for (String uri : csv.split(",")) {
+                    for (String uri : csv.split("\\s+")) {
                         addOriginFromUri(uri.trim());
                     }
                 }

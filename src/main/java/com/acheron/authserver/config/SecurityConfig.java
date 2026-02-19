@@ -43,13 +43,16 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 import tools.jackson.databind.DefaultTyping;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.time.Duration;
 import java.util.UUID;
+import com.acheron.authserver.repository.UserRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -58,9 +61,15 @@ public class SecurityConfig {
     private final Oauth2AccessTokenCustomizer oauth2AccessTokenCustomizer;
     private final PasswordEncoder passwordEncoder;
     private final FederatedIdentityAuthenticationSuccessHandler auth2LoginSuccessHandler;
+    private final LoggingAuthenticationSuccessHandler loggingAuthenticationSuccessHandler;
     private final CustomWebAuthenticationDetailsSource authenticationDetailsSource;
     private final MFADaoAuthProvider daoAuthenticationProvider;
     private final DynamicCorsConfigurationSource dynamicCorsConfigurationSource;
+
+    @Bean
+    public ForwardedHeaderFilter forwardedHeaderFilter() {
+        return new ForwardedHeaderFilter();
+    }
 
     @Bean
     @Order(1)
@@ -76,6 +85,10 @@ public class SecurityConfig {
                         .authenticationProvider(new PublicClientRefreshTokenAuthenticationProvider(
                                 registeredClientRepository, authorizationService))
                 );
+        authorizationServerConfigurer
+                .tokenEndpoint(tokenEndpoint -> tokenEndpoint
+                        .errorResponseHandler(new RefreshTokenReuseDetectionErrorHandler(authorizationService))
+                );
         http
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -85,9 +98,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/mfa_qr", "/spa/logout", "/login", "/registration", "/.well-known/appspecific/**"
-                                , "/favicon.ico", "/actuator/prometheus", "/error"
-                        ).permitAll().anyRequest().authenticated());
+                        .requestMatchers(
+                                "/mfa_qr", "/login", "/registration",
+                                "/.well-known/appspecific/**",
+                                "/favicon.ico", "/actuator/prometheus", "/error"
+                        ).permitAll()
+                        .anyRequest().authenticated());
         http.oidcLogout(Customizer.withDefaults());
         http
                 .exceptionHandling((exceptions) ->
@@ -99,7 +115,9 @@ public class SecurityConfig {
                 .oauth2ResourceServer(resourceServer ->
                         resourceServer.jwt(Customizer.withDefaults()));
         http.cors(cors -> cors.configurationSource(dynamicCorsConfigurationSource));
-        http.formLogin(formLogin -> formLogin.loginPage("/login").permitAll().authenticationDetailsSource(authenticationDetailsSource));
+        http.formLogin(formLogin -> formLogin
+                .loginPage("/login").permitAll()
+                .authenticationDetailsSource(authenticationDetailsSource));
         return http.build();
     }
 
@@ -112,25 +130,37 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .ignoringRequestMatchers("/user-info/**", "/spa/logout")
                 )
-                .formLogin(formLogin -> formLogin.loginPage("/login").permitAll().authenticationDetailsSource(authenticationDetailsSource))
+                .headers(headers -> headers
+                        .referrerPolicy(referrer ->
+                                referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .frameOptions(frame -> frame.sameOrigin())
+                        .contentTypeOptions(Customizer.withDefaults())
+                )
+                .formLogin(formLogin -> formLogin
+                        .loginPage("/login").permitAll()
+                        .authenticationDetailsSource(authenticationDetailsSource)
+                        .successHandler(loggingAuthenticationSuccessHandler)
+                )
                 .oauth2Login(oauth2Login ->
                         oauth2Login.loginPage("/login").permitAll()
                                 .successHandler(auth2LoginSuccessHandler)
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "/", "/spa/logout", "/login"
-                                , "/registration", "/.well-known/appspecific/**", "/actuator/prometheus",
-                                "/reset_password",
-                                "/reset_password_token",
-                                "/img.png"
-                                , "/favicon.ico",
-                                "/front/**", "/mfa_qr", "/error"
-                        )
-                        .permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll().anyRequest().authenticated());
-        http.cors(cors -> cors.configurationSource(dynamicCorsConfigurationSource));
+                                "/", "/login", "/registration",
+                                "/.well-known/appspecific/**",
+                                "/actuator/prometheus",
+                                "/reset_password", "/reset_password_token",
+                                "/favicon.ico", "/front/**", "/mfa_qr", "/error",
+                                "/v3/api-docs", "/v3/api-docs.yaml",
+                                "/swagger-ui/**", "/swagger-ui.html"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .cors(cors -> cors.configurationSource(dynamicCorsConfigurationSource));
         return http.build();
     }
 
@@ -147,7 +177,8 @@ public class SecurityConfig {
     @Bean
     public OAuth2AuthorizationService authorizationService(
             JdbcTemplate jdbcTemplate,
-            RegisteredClientRepository registeredClientRepository) {
+            RegisteredClientRepository registeredClientRepository,
+            UserRepository userRepository) {
 
         JdbcOAuth2AuthorizationService service =
                 new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
@@ -178,13 +209,15 @@ public class SecurityConfig {
         service.setAuthorizationRowMapper(rowMapper);
         service.setAuthorizationParametersMapper(paramsMapper);
 
-        return service;
+        return new TokenVersionCheckingOAuth2AuthorizationService(service, userRepository);
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository(@Value("${gateway.client.secret}") String gatewaySecret, JdbcTemplate jdbcTemplate) {
+    public RegisteredClientRepository registeredClientRepository(
+            @Value("${gateway.client.secret}") String gatewaySecret,
+            JdbcTemplate jdbcTemplate) {
+
         JdbcRegisteredClientRepository repository = new JdbcRegisteredClientRepository(jdbcTemplate);
-        //TODO move clients to changelogs
         String gatewayClientId = "gateway-client";
         if (repository.findByClientId(gatewayClientId) == null) {
             RegisteredClient webClient = RegisteredClient.withId(UUID.randomUUID().toString())
@@ -198,13 +231,13 @@ public class SecurityConfig {
                     .scope(OidcScopes.OPENID)
                     .scope(OidcScopes.PROFILE)
                     .scope(OidcScopes.EMAIL)
+                    .scope("message.read")
                     .tokenSettings(TokenSettings.builder()
                             .accessTokenTimeToLive(Duration.ofMinutes(5))
                             .refreshTokenTimeToLive(Duration.ofDays(20))
                             .reuseRefreshTokens(false)
                             .build())
                     .clientSettings(ClientSettings.builder()
-//                            .requireAuthorizationConsent(true)
                             .requireAuthorizationConsent(false)
                             .build())
                     .build();
