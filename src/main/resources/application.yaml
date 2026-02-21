@@ -32,6 +32,14 @@ spring:
               - user
               - user:email
 
+          discord:
+            client-id: ${DISCORD_CLIENT_ID}
+            client-secret: ${DISCORD_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope:
+              - identify
+              - email
+
         provider:
           auth-server:
             token-uri: http://127.0.0.1:9000/oauth2/token
