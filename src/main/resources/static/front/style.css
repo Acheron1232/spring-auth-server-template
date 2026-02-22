@@ -323,6 +323,17 @@ body > .auth-box {
     border-color: rgba(255, 255, 255, 0.12);
 }
 
+.oauth-btn--discord {
+    background: rgba(88, 101, 242, 0.18);
+    border-color: rgba(88, 101, 242, 0.45);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.oauth-btn--discord:hover {
+    background: rgba(88, 101, 242, 0.28);
+    border-color: rgba(88, 101, 242, 0.65);
+}
+
 .auth-links {
     margin-top: 14px;
     display: grid;
