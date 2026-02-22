@@ -8,7 +8,8 @@ public enum OAuthProvider {
     GOOGLE("google"),
     MICROSOFT("microsoft"),
     APPLE("apple"),
-    FACEBOOK("facebook");
+    FACEBOOK("facebook"),
+    DISCORD("discord");
 
     private final String registrationId;
 
