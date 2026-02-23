@@ -20,10 +20,6 @@ import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 @EnableCaching
 public class RedisConfig {
 
-    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-    public abstract static class SecurityPrincipalMixin {
-    }
-
     @Bean
     public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
         return new GenericJacksonJsonRedisSerializer(buildObjectMapper());

@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+//TODO
 public class DynamicCorsConfigurationSource implements CorsConfigurationSource {
 
     private final JdbcTemplate jdbcTemplate;

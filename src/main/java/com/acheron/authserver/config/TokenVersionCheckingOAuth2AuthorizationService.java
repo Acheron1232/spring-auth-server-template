@@ -2,7 +2,6 @@ package com.acheron.authserver.config;
 
 import com.acheron.authserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.Nullable;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -32,14 +31,12 @@ public class TokenVersionCheckingOAuth2AuthorizationService implements OAuth2Aut
     }
 
     @Override
-    @Nullable
     public OAuth2Authorization findById(String id) {
         return delegate.findById(id);
     }
 
     @Override
-    @Nullable
-    public OAuth2Authorization findByToken(String token, @Nullable OAuth2TokenType tokenType) {
+    public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
         OAuth2Authorization authorization = delegate.findByToken(token, tokenType);
         if (authorization == null) return null;
 

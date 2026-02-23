@@ -43,7 +43,7 @@ class OpenApiGeneratorTest {
                 .getResponse()
                 .getContentAsByteArray();
 
-        Path path = Paths.get("openapi.yaml");
+        Path path = Paths.get("openapi/openapi.yaml");
         Files.write(path, apiDocs);
 
     }

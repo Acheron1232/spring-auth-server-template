@@ -1,10 +1,12 @@
 package com.acheron.authserver.config;
 
 import com.acheron.authserver.entity.User;
+import com.acheron.authserver.repository.UserRepository;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.jackson.SecurityJacksonModules;
@@ -52,10 +55,9 @@ import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.time.Duration;
 import java.util.UUID;
-import com.acheron.authserver.repository.UserRepository;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity(debug = false)
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final Oauth2AccessTokenCustomizer oauth2AccessTokenCustomizer;
@@ -64,7 +66,7 @@ public class SecurityConfig {
     private final LoggingAuthenticationSuccessHandler loggingAuthenticationSuccessHandler;
     private final CustomWebAuthenticationDetailsSource authenticationDetailsSource;
     private final MFADaoAuthProvider daoAuthenticationProvider;
-    private final DynamicCorsConfigurationSource dynamicCorsConfigurationSource;
+//    private final DynamicCorsConfigurationSource dynamicCorsConfigurationSource;
 
     @Bean
     public ForwardedHeaderFilter forwardedHeaderFilter() {
@@ -78,17 +80,8 @@ public class SecurityConfig {
             RegisteredClientRepository registeredClientRepository,
             OAuth2AuthorizationService authorizationService) {
 
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
-        authorizationServerConfigurer
-                .clientAuthentication(clientAuth -> clientAuth
-                        .authenticationConverter(new PublicClientRefreshTokenAuthenticationConverter())
-                        .authenticationProvider(new PublicClientRefreshTokenAuthenticationProvider(
-                                registeredClientRepository, authorizationService))
-                );
-        authorizationServerConfigurer
-                .tokenEndpoint(tokenEndpoint -> tokenEndpoint
-                        .errorResponseHandler(new RefreshTokenReuseDetectionErrorHandler(authorizationService))
-                );
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                getOAuth2AuthorizationServerConfigurer(registeredClientRepository, authorizationService);
         http
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -114,16 +107,32 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(resourceServer ->
                         resourceServer.jwt(Customizer.withDefaults()));
-        http.cors(cors -> cors.configurationSource(dynamicCorsConfigurationSource));
+//        http.cors(cors -> cors.configurationSource(dynamicCorsConfigurationSource));
+        http.cors(Customizer.withDefaults());
         http.formLogin(formLogin -> formLogin
                 .loginPage("/login").permitAll()
                 .authenticationDetailsSource(authenticationDetailsSource));
         return http.build();
     }
 
+    private static @NonNull OAuth2AuthorizationServerConfigurer getOAuth2AuthorizationServerConfigurer(RegisteredClientRepository registeredClientRepository, OAuth2AuthorizationService authorizationService) {
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
+        authorizationServerConfigurer
+                .clientAuthentication(clientAuth -> clientAuth
+                        .authenticationConverter(new PublicClientRefreshTokenAuthenticationConverter())
+                        .authenticationProvider(new PublicClientRefreshTokenAuthenticationProvider(
+                                registeredClientRepository, authorizationService))
+                );
+        authorizationServerConfigurer
+                .tokenEndpoint(tokenEndpoint -> tokenEndpoint
+                        .errorResponseHandler(new RefreshTokenReuseDetectionErrorHandler(authorizationService))
+                );
+        return authorizationServerConfigurer;
+    }
+
     @Bean
     @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) {
         http.oauth2ResourceServer(resourceServer ->
                 resourceServer.jwt(Customizer.withDefaults()));
         http
@@ -135,7 +144,7 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .referrerPolicy(referrer ->
                                 referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        .frameOptions(frame -> frame.sameOrigin())
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                         .contentTypeOptions(Customizer.withDefaults())
                 )
                 .formLogin(formLogin -> formLogin
@@ -159,8 +168,9 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .cors(cors -> cors.configurationSource(dynamicCorsConfigurationSource));
+                        .anyRequest().authenticated());
+        //        http.cors(cors -> cors.configurationSource(dynamicCorsConfigurationSource));
+        http.cors(Customizer.withDefaults());
         return http.build();
     }
 
@@ -222,7 +232,7 @@ public class SecurityConfig {
         if (repository.findByClientId(gatewayClientId) == null) {
             RegisteredClient webClient = RegisteredClient.withId(UUID.randomUUID().toString())
                     .clientId(gatewayClientId)
-                    .clientSecret(passwordEncoder.encode(gatewaySecret))
+                    .clientSecret(passwordEncoder.encode("zxczxczxc"))//TODO
                     .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                     .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
@@ -231,7 +241,6 @@ public class SecurityConfig {
                     .scope(OidcScopes.OPENID)
                     .scope(OidcScopes.PROFILE)
                     .scope(OidcScopes.EMAIL)
-                    .scope("message.read")
                     .tokenSettings(TokenSettings.builder()
                             .accessTokenTimeToLive(Duration.ofMinutes(5))
                             .refreshTokenTimeToLive(Duration.ofDays(20))

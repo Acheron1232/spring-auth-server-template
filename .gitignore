@@ -4,8 +4,11 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-
+ANALYSIS.md
 .env
+
+# Local scratch HTTP requests (manual Postman import/copy)
+requests/*.http
 
 ### STS ###
 .apt_generated

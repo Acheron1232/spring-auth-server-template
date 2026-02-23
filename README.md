@@ -49,8 +49,8 @@ Perfect for teams who need to **add authentication to a new project quickly** or
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   SPA / App │────>│  Spring Gateway  │────>│  Resource Server │
-│  (Browser)  │     │  (BFF + Session) │     │   (Your API)    │
+│   SPA / App │────>│  Spring Gateway  │────>│Resource Servers │
+│  (Browser)  │     │  (BFF + Session) │     │  (Your APIs)    │
 └─────────────┘     └────────┬─────────┘     └─────────────────┘
                              │
                     ┌────────▼─────────┐
@@ -65,7 +65,7 @@ Perfect for teams who need to **add authentication to a new project quickly** or
                    ┌─────────┴──────────┐
                    │                    │
               ┌────▼─────┐       ┌──────▼──┐
-              │PostgreSQL │       │  Redis  │
+              │PostgreSQL│       │  Redis  │
               └──────────┘       └─────────┘
 ```
 

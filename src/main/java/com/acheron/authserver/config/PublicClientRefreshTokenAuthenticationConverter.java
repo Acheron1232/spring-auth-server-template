@@ -19,7 +19,6 @@ import java.util.Map;
 
 public class PublicClientRefreshTokenAuthenticationConverter implements AuthenticationConverter {
 
-    @Nullable
     @Override
     public Authentication convert(HttpServletRequest request) {
 

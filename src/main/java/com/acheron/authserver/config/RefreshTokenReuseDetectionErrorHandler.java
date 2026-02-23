@@ -1,6 +1,5 @@
 package com.acheron.authserver.config;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class RefreshTokenReuseDetectionErrorHandler implements AuthenticationFai
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                        AuthenticationException exception) throws IOException, ServletException {
+                                        AuthenticationException exception) throws IOException {
 
         try {
             String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);

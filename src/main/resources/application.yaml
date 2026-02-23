@@ -51,10 +51,11 @@ spring:
       enabled: true
 
   config:
-    import: file:.env[.properties]
+    import: optional:file:.env[.properties]
 
   docker:
     compose:
+#      enabled: true
       file: local-infra/docker-compose.yaml
 
   jpa:
