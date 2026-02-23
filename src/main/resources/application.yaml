@@ -2,8 +2,8 @@ spring:
   application:
     name: auth-server
 
-  profiles:
-    active: dev
+  #  profiles:
+  #    active: dev
   security:
     oauth2:
       client:
@@ -11,13 +11,13 @@ spring:
 
           auth-server-service:
             provider: auth-server
-            client-id: ${AUTH_SERVER_CLIENT_ID}
-            client-secret: ${AUTH_SERVER_CLIENT_SECRET}
+            client-id: ${AUTH_SERVER_CLIENT_ID:dummy}
+            client-secret: ${AUTH_SERVER_CLIENT_SECRET:dummy}
             authorization-grant-type: client_credentials
 
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID:dummy}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
             authorization-grant-type: authorization_code
             scope:
               - profile
@@ -25,8 +25,8 @@ spring:
               - openid
 
           github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
+            client-id: ${GITHUB_CLIENT_ID:dummy}
+            client-secret: ${GITHUB_CLIENT_SECRET:dummy}
             authorization-grant-type: authorization_code
             scope:
               - user
@@ -55,7 +55,7 @@ spring:
 
   docker:
     compose:
-#      enabled: true
+      #      enabled: true
       file: local-infra/docker-compose.yaml
 
   jpa:
@@ -76,10 +76,10 @@ spring:
         repository-type: default
 
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:dummy}
+    password: ${MAIL_PASSWORD:dummy}
     properties:
       mail:
         smtp:
@@ -92,14 +92,14 @@ app:
 
 gateway:
   client:
-    secret: ${GATEWAY_CLIENT_SECRET}
+    secret: ${GATEWAY_CLIENT_SECRET:dummy}
 
 aws:
-  public_key: ${AWS_PUBLIC_KEY}
-  private_key: ${AWS_PRIVATE_KEY}
+  public_key: ${AWS_PUBLIC_KEY:dummy}
+  private_key: ${AWS_PRIVATE_KEY:dummy}
   region: ${AWS_REGION:eu-north-1}
-  arn: ${AWS_ARN}
-  bucket_name: ${AWS_BUCKET_NAME}
+  arn: ${AWS_ARN:dummy}
+  bucket_name: ${AWS_BUCKET_NAME:dummy}
 
 springdoc:
   api-docs:
